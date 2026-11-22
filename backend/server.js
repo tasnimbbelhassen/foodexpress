@@ -7,6 +7,7 @@ const app = express();
 
 app.use(cors({ origin: 'http://localhost:4200' }));
 app.use(express.json());
+app.use('/api/auth', require('./routes/authRoutes'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
