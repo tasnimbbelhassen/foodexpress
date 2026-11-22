@@ -6,8 +6,17 @@ const signToken = (user) =>
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
   });
 
+const publicUser = (user) => ({
+  id: user._id,
+  nom: user.nom,
+  prenom: user.prenom,
+  email: user.email,
+  telephone: user.telephone,
+  role: user.role,
+});
+
 exports.register = async (req, res) => {
-  const { nom, prenom, email, telephone, password, confirmation } = req.body;
+  const { nom, prenom, email, telephone, password, confirmation, role } = req.body;
 
   if (!nom || !prenom || !email || !telephone || !password || !confirmation) {
     return res.status(400).json({ message: 'Tous les champs sont obligatoires' });
@@ -25,14 +34,25 @@ exports.register = async (req, res) => {
     return res.status(409).json({ message: 'Cet email est déjà utilisé' });
   }
 
-  // Le rôle est forcé à "client" : on ignore req.body.role
-  const user = await User.create({ nom, prenom, email, telephone, password, role: 'client' });
+  // Seuls "client" et "restaurateur" sont acceptés.
+  // "admin" ou toute autre valeur devient "client".
+  const allowedRole = role === 'restaurateur' ? 'restaurateur' : 'client';
+
+  const user = await User.create({
+    nom,
+    prenom,
+    email,
+    telephone,
+    password,
+    role: allowedRole,
+  });
 
   res.status(201).json({
     token: signToken(user),
-    user: { id: user._id, nom: user.nom, prenom: user.prenom, email: user.email, role: user.role },
+    user: publicUser(user),
   });
 };
+
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -55,7 +75,8 @@ exports.login = async (req, res) => {
 
   res.json({
     token: signToken(user),
-    user: { id: user._id, nom: user.nom, prenom: user.prenom, email: user.email, role: user.role },
+    user: publicUser(user),
   });
 };
+
 exports.signToken = signToken;
