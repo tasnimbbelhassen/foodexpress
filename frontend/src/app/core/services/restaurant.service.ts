@@ -2,6 +2,8 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { API_URL } from '../api';
+import { Category } from './category.service';
+import { Dish } from './dish.service';
 
 export interface Restaurant {
   _id: string;
@@ -20,6 +22,15 @@ export interface RestaurantPage {
   limit: number;
   total: number;
   totalPages: number;
+}
+
+// Catégorie du menu avec ses plats
+export interface MenuCategory extends Category {
+  dishes: Dish[];
+}
+export interface Menu {
+  restaurant: Restaurant;
+  categories: MenuCategory[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -47,5 +58,22 @@ export class RestaurantService {
     return this.http
       .get<Restaurant | null>(`${API_URL}/restaurants/mine`)
       .pipe(tap((r) => this.myRestaurant.set(r)));
+  }
+
+  getById(id: string) {
+    return this.http.get<Restaurant>(`${API_URL}/restaurants/${id}`);
+  }
+
+  // Restaurant + catégories + plats (public)
+  getMenu(id: string) {
+    return this.http.get<Menu>(`${API_URL}/restaurants/${id}/menu`);
+  }
+
+  update(id: string, data: Partial<Restaurant>) {
+    return this.http.put<Restaurant>(`${API_URL}/restaurants/${id}`, data).pipe(
+      tap((r) => {
+        if (this.myRestaurant()?._id === r._id) this.myRestaurant.set(r);
+      })
+    );
   }
 }
