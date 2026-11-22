@@ -33,6 +33,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/profile/profile.component').then((m) => m.ProfileComponent),
   },
+    {
+    path: 'cart',
+    canActivate: [authGuard, roleGuard('client')],
+    loadComponent: () => import('./pages/cart/cart.component').then((m) => m.CartComponent),
+  },
   {
     path: 'create-restaurant',
     canActivate: [authGuard, roleGuard('restaurateur', 'admin')],
