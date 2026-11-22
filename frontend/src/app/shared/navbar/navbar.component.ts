@@ -10,14 +10,28 @@ import { RestaurantService } from '../../core/services/restaurant.service';
     <nav class="navbar navbar-expand navbar-dark bg-dark">
       <div class="container">
         <a class="navbar-brand" routerLink="/restaurants">🍕 FoodExpress</a>
-        <ul class="navbar-nav ms-auto align-items-center">
+        <ul class="navbar-nav ms-auto align-items-center flex-wrap">
           <li class="nav-item">
-            <a class="nav-link" routerLink="/restaurants" routerLinkActive="active">Restaurants</a>
+            <a class="nav-link" routerLink="/restaurants" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Restaurants</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/dishes" routerLinkActive="active">Plats</a>
           </li>
           @if (auth.isLoggedIn()) {
             @if (auth.user()?.role === 'restaurateur' && !restaurants.myRestaurant()) {
               <li class="nav-item">
                 <a class="nav-link" routerLink="/create-restaurant" routerLinkActive="active">Créer mon restaurant</a>
+              </li>
+            }
+            @if (auth.user()?.role === 'restaurateur' && restaurants.myRestaurant()) {
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/restaurant-dashboard/restaurant" routerLinkActive="active">Mon restaurant</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/restaurant-dashboard/categories" routerLinkActive="active">Catégories</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/restaurant-dashboard/dishes" routerLinkActive="active">Mes plats</a>
               </li>
             }
             <li class="nav-item">

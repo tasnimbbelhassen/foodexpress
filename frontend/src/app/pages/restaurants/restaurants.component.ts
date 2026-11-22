@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Restaurant, RestaurantService } from '../../core/services/restaurant.service';
 
 @Component({
   selector: 'app-restaurants',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   template: `
     <h2 class="mb-3">Restaurants</h2>
 
@@ -65,6 +66,9 @@ import { Restaurant, RestaurantService } from '../../core/services/restaurant.se
                 <li>🕒 {{ r.horaires }}</li>
                 <li>🚚 Livraison : {{ r.fraisLivraison }} DT</li>
               </ul>
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-0">
+              <a class="btn btn-outline-primary btn-sm w-100" [routerLink]="['/restaurants', r._id]">Voir le menu</a>
             </div>
           </div>
         </div>
