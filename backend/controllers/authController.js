@@ -33,5 +33,29 @@ exports.register = async (req, res) => {
     user: { id: user._id, nom: user.nom, prenom: user.prenom, email: user.email, role: user.role },
   });
 };
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email et mot de passe obligatoires' });
+  }
+
+  // password est en select:false, on le demande explicitement
+  const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+
+  // Même message dans les deux cas pour ne pas révéler si l'email existe
+  if (!user || !(await user.comparePassword(password))) {
+    return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+  }
+
+  // Règle 10 : un compte désactivé ne peut plus se connecter
+  if (!user.isActive) {
+    return res.status(403).json({ message: 'Compte désactivé' });
+  }
+
+  res.json({
+    token: signToken(user),
+    user: { id: user._id, nom: user.nom, prenom: user.prenom, email: user.email, role: user.role },
+  });
+};
 exports.signToken = signToken;
