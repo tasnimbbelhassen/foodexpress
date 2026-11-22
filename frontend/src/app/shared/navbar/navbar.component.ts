@@ -2,7 +2,7 @@ import { Component, effect, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { RestaurantService } from '../../core/services/restaurant.service';
-
+import { CartService } from '../../core/services/cart.service';
 @Component({
   selector: 'app-navbar',
   imports: [RouterLink, RouterLinkActive],
@@ -17,10 +17,19 @@ import { RestaurantService } from '../../core/services/restaurant.service';
           <li class="nav-item">
             <a class="nav-link" routerLink="/dishes" routerLinkActive="active">Plats</a>
           </li>
+
           @if (auth.isLoggedIn()) {
             @if (auth.user()?.role === 'restaurateur' && !restaurants.myRestaurant()) {
               <li class="nav-item">
                 <a class="nav-link" routerLink="/create-restaurant" routerLinkActive="active">Créer mon restaurant</a>
+              </li>
+            }
+            @if (auth.user()?.role === 'client') {
+              <li class="nav-item">
+                <a class="nav-link" routerLink="/cart" routerLinkActive="active">
+                  🛒 Panier
+                  @if (cart.count() > 0) { <span class="badge rounded-pill bg-warning text-dark">{{ cart.count() }}</span> }
+                </a>
               </li>
             }
             @if (auth.user()?.role === 'restaurateur' && restaurants.myRestaurant()) {
@@ -54,7 +63,7 @@ import { RestaurantService } from '../../core/services/restaurant.service';
 export class NavbarComponent {
   auth = inject(AuthService);
   restaurants = inject(RestaurantService);
-
+    cart = inject(CartService);
   constructor() {
     // À chaque changement d'utilisateur : recharger son restaurant (restaurateur) ou vider
     effect(() => {

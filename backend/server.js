@@ -12,7 +12,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/restaurants', require('./routes/restaurantRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/dishes', require('./routes/dishRoutes'));
-
+app.use('/api/panier', require('./routes/panierRoutes'));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // Gestion d'erreurs globale

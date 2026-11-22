@@ -2,7 +2,9 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Menu, RestaurantService } from '../../core/services/restaurant.service';
-
+import { AuthService } from '../../core/services/auth.service';
+import { CartService } from '../../core/services/cart.service';
+import { Dish } from '../../core/services/dish.service';
 @Component({
   selector: 'app-restaurant-details',
   imports: [FormsModule, RouterLink],
@@ -45,7 +47,14 @@ import { Menu, RestaurantService } from '../../core/services/restaurant.service'
       @if (!m.restaurant.isOpen) {
         <div class="alert alert-warning">Ce restaurant est actuellement fermé.</div>
       }
-
+      @if (cartError()) {
+        <div class="alert alert-danger py-2">{{ cartError() }}</div>
+      }
+      @if (notice()) {
+        <div class="alert alert-success py-2">
+          {{ notice() }} <a routerLink="/cart" class="alert-link">Voir le panier</a>
+        </div>
+      }
       <div class="row g-2 mb-3">
         <div class="col-md-6">
           <input class="form-control" placeholder="Rechercher un plat dans ce menu..."
@@ -96,6 +105,18 @@ import { Menu, RestaurantService } from '../../core/services/restaurant.service'
                       }
                       <!-- Personne 3 (panier) : ajouter ici le bouton « Ajouter au panier »,
                            à afficher seulement si d.disponible (règle : plat indisponible = non commandable). -->
+                                                 @if (d.disponible) {
+                        @if (auth.user()?.role === 'client') {
+                          @if (m.restaurant.isOpen) {
+                            <button class="btn btn-sm btn-primary ms-2" (click)="addToCart(d)">
+                              🛒 Ajouter au panier
+                              @if (cart.quantiteOf(d._id) > 0) { ({{ cart.quantiteOf(d._id) }}) }
+                            </button>
+                          }
+                        } @else if (!auth.isLoggedIn()) {
+                          <a class="btn btn-sm btn-outline-primary ms-2" routerLink="/login">Se connecter pour commander</a>
+                        }
+                      }
                     </div>
                   </div>
                 </div>
@@ -110,7 +131,10 @@ import { Menu, RestaurantService } from '../../core/services/restaurant.service'
 export class RestaurantDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(RestaurantService);
-
+    auth = inject(AuthService);
+  cart = inject(CartService);
+  notice = signal('');
+  cartError = signal('');
   menu = signal<Menu | null>(null);
   loading = signal(true);
   error = signal('');
@@ -132,7 +156,25 @@ export class RestaurantDetailsComponent implements OnInit {
       }))
       .filter((c) => c.dishes.length > 0);
   });
-
+    // Un panier ne contient que les plats d'un seul restaurant : on demande confirmation avant de le remplacer
+  addToCart(dish: Dish, remplacer = false) {
+    const r = this.menu()?.restaurant;
+    if (!r || !dish.disponible || !r.isOpen) return;
+    this.notice.set('');
+    this.cartError.set('');
+    this.cart.ajouterPlat(dish._id, remplacer).subscribe({
+      next: () => this.notice.set(`« ${dish.nom} » ajouté au panier.`),
+      error: (err) => {
+        if (err.status === 409 && err.error?.code === 'AUTRE_RESTAURANT') {
+          if (confirm("Votre panier contient des plats d'un autre restaurant. Le vider et commencer un nouveau panier ?")) {
+            this.addToCart(dish, true);
+          }
+        } else {
+          this.cartError.set(err.error?.message || "Impossible d'ajouter ce plat au panier.");
+        }
+      },
+    });
+  }
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.service.getMenu(id).subscribe({
