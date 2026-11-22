@@ -1,4 +1,7 @@
 const Restaurant = require('../models/Restaurant');
+const Category = require('../models/Category');
+const Dish = require('../models/Dish');
+const { HttpError, isId, assertCanManage } = require('../utils/ownership');
 
 // POST /api/restaurants (restaurateur ou admin)
 exports.createRestaurant = async (req, res) => {
@@ -76,4 +79,61 @@ exports.getRestaurants = async (req, res) => {
     total,
     totalPages: Math.ceil(total / limit),
   });
+};
+
+// GET /api/restaurants/:id (public) : détail d'un restaurant validé
+exports.getRestaurantById = async (req, res) => {
+  if (!isId(req.params.id)) throw new HttpError(400, 'Identifiant invalide');
+  const restaurant = await Restaurant.findOne({ _id: req.params.id, statut: 'valide' });
+  if (!restaurant) throw new HttpError(404, 'Restaurant introuvable');
+  res.json(restaurant);
+};
+
+// GET /api/restaurants/:id/menu (public) : le restaurant + ses catégories, chacune avec ses plats
+exports.getRestaurantMenu = async (req, res) => {
+  if (!isId(req.params.id)) throw new HttpError(400, 'Identifiant invalide');
+  const restaurant = await Restaurant.findOne({ _id: req.params.id, statut: 'valide' });
+  if (!restaurant) throw new HttpError(404, 'Restaurant introuvable');
+
+  const [categories, dishes] = await Promise.all([
+    Category.find({ restaurant: restaurant._id }).sort({ nom: 1 }).collation({ locale: 'fr', strength: 2 }).lean(),
+    Dish.find({ restaurant: restaurant._id }).sort({ nom: 1 }).collation({ locale: 'fr', strength: 2 }).lean(),
+  ]);
+
+  const menu = categories.map((c) => ({
+    ...c,
+    dishes: dishes.filter((d) => d.categorie.equals(c._id)),
+  }));
+
+  res.json({ restaurant, categories: menu });
+};
+
+// PUT /api/restaurants/:id (propriétaire ou admin)
+exports.updateRestaurant = async (req, res) => {
+  if (!isId(req.params.id)) throw new HttpError(400, 'Identifiant invalide');
+  const restaurant = await Restaurant.findById(req.params.id);
+  if (!restaurant) throw new HttpError(404, 'Restaurant introuvable');
+
+  // Un restaurateur ne modifie que son propre restaurant
+  await assertCanManage(req.user, restaurant._id);
+
+  // Liste blanche : owner et statut ne sont jamais modifiables ici
+  const editable = ['nom', 'description', 'adresse', 'typeCuisine', 'image', 'fraisLivraison', 'horaires', 'isOpen'];
+  for (const field of editable) {
+    if (req.body[field] !== undefined) restaurant[field] = req.body[field];
+  }
+
+  if (!restaurant.nom || !restaurant.adresse || !restaurant.typeCuisine) {
+    throw new HttpError(400, 'Nom, adresse et type de cuisine sont obligatoires');
+  }
+
+  try {
+    await restaurant.save();
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      throw new HttpError(400, Object.values(err.errors).map((e) => e.message).join(', '));
+    }
+    throw err;
+  }
+  res.json(restaurant);
 };
