@@ -9,6 +9,7 @@ app.use(cors({ origin: 'http://localhost:4200' }));
 app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/restaurants', require('./routes/restaurantRoutes'));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
