@@ -38,6 +38,18 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard('client')],
     loadComponent: () => import('./pages/cart/cart.component').then((m) => m.CartComponent),
   },
+
+  {
+    path: 'orders',
+    canActivate: [authGuard, roleGuard('client')],
+    loadComponent: () => import('./pages/orders/orders.component').then((m) => m.OrdersComponent),
+  },
+  {
+    path: 'orders/:id',
+    canActivate: [authGuard, roleGuard('client')],
+    loadComponent: () =>
+      import('./pages/order-detail/order-detail.component').then((m) => m.OrderDetailComponent),
+  },
   {
     path: 'create-restaurant',
     canActivate: [authGuard, roleGuard('restaurateur', 'admin')],
@@ -70,6 +82,21 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./restaurant-dashboard/manage-dishes/manage-dishes.component').then(
             (m) => m.ManageDishesComponent
+          ),
+      },
+        // Personne 4 : suivi des commandes (client)
+      {
+        path: 'orders',
+        loadComponent: () =>
+          import('./restaurant-dashboard/manage-orders/manage-orders.component').then(
+            (m) => m.ManageOrdersComponent
+          ),
+      },
+      {
+        path: 'orders/:id',
+        loadComponent: () =>
+          import('./pages/order-detail/order-detail.component').then(
+            (m) => m.OrderDetailComponent
           ),
       },
     ],
