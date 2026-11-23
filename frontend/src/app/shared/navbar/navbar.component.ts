@@ -31,6 +31,9 @@ import { CartService } from '../../core/services/cart.service';
                   @if (cart.count() > 0) { <span class="badge rounded-pill bg-warning text-dark">{{ cart.count() }}</span> }
                 </a>
               </li>
+               <li class="nav-item">
+                <a class="nav-link" routerLink="/orders" routerLinkActive="active">Mes commandes</a>
+              </li>
             }
             @if (auth.user()?.role === 'restaurateur' && restaurants.myRestaurant()) {
               <li class="nav-item">
@@ -41,6 +44,9 @@ import { CartService } from '../../core/services/cart.service';
               </li>
               <li class="nav-item">
                 <a class="nav-link" routerLink="/restaurant-dashboard/dishes" routerLinkActive="active">Mes plats</a>
+              </li>
+               <li class="nav-item">
+                <a class="nav-link" routerLink="/restaurant-dashboard/orders" routerLinkActive="active">Commandes</a>
               </li>
             }
             <li class="nav-item">

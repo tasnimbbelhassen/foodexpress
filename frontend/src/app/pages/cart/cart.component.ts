@@ -21,6 +21,7 @@ import { Commande } from '../../core/services/commande.service';
         </p>
         <p class="mb-0">Livraison à : {{ commande.adresseLivraison }} · Paiement en espèces à la livraison.</p>
       </div>
+      <a [routerLink]="['/orders', commande._id]" class="btn btn-success me-2">Suivre ma commande</a>
       <a routerLink="/restaurants" class="btn btn-primary">Continuer mes achats</a>
     } @else if (loading()) {
       <p>Chargement...</p>
