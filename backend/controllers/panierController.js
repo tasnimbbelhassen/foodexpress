@@ -213,7 +213,7 @@ exports.passerCommande = async (req, res) => {
   }
 
   //vider le panier sur le base 
- //await supprimerPanier(panier);
+ await supprimerPanier(panier);
 
   const lignesCommande = await LigneCommande.find({ commande: commande._id });
   res.status(201).json({ ...commande.toJSON(), lignes: lignesCommande });

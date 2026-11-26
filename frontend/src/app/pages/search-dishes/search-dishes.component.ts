@@ -7,62 +7,71 @@ import { DishSearchItem, DishService } from '../../core/services/dish.service';
   selector: 'app-search-dishes',
   imports: [FormsModule, RouterLink],
   template: `
-    <h2 class="mb-3">Rechercher un plat</h2>
+    <section class="dx-hero">
+      <h1>Quel plat vous fait <span>envie</span> ?</h1>
+      <p>Cherchez parmi tous les menus, puis filez directement chez le restaurant.</p>
 
-    <div class="row g-2 mb-4 align-items-center">
-      <div class="col-md-6">
-        <input class="form-control" placeholder="Ex : pizza, couscous, tiramisu..."
+      <div class="dx-search">
+        <svg width="20" height="20"><use href="#i-search" /></svg>
+        <input placeholder="Ex : pizza, couscous, tiramisu..." aria-label="Rechercher un plat"
                [(ngModel)]="search" (keyup.enter)="applyFilters()" />
+        <button type="button" (click)="applyFilters()">Rechercher</button>
       </div>
-      <div class="col-md-3">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="dispo"
-                 [(ngModel)]="onlyAvailable" (ngModelChange)="applyFilters()" />
-          <label class="form-check-label" for="dispo">Disponibles uniquement</label>
-        </div>
-      </div>
-      <div class="col-md-2">
-        <button class="btn btn-primary w-100" (click)="applyFilters()">Rechercher</button>
-      </div>
-    </div>
+
+      <label class="dx-switch" for="dispo">
+        <input type="checkbox" id="dispo" [(ngModel)]="onlyAvailable" (ngModelChange)="applyFilters()" />
+        <i></i> Disponibles uniquement
+      </label>
+    </section>
 
     @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
-    @if (loading()) { <p>Chargement...</p> }
+    @if (loading()) { <p class="dx-state">Chargement...</p> }
     @if (!loading() && !error() && dishes().length === 0) {
-      <div class="alert alert-info">Aucun plat trouvé.</div>
+      <div class="dx-empty">
+        <svg width="34" height="34"><use href="#i-search" /></svg>
+        <b>Aucun plat trouvé.</b>
+        <span>Essayez un autre mot, ou retirez le filtre.</span>
+      </div>
     }
 
-    <div class="row g-3">
+    @if (!loading() && dishes().length > 0) {
+      <div class="dx-listh">
+        <h2>Tous les plats</h2>
+        <span>{{ total() }}</span>
+      </div>
+    }
+
+    <div class="dx-grid">
       @for (d of dishes(); track d._id) {
-        <div class="col-md-6">
-          <div class="card h-100" [class.opacity-50]="!d.disponible">
-            <div class="card-body d-flex gap-3">
-              @if (d.image && d.image.startsWith('http')) {
-                <img [src]="d.image" [alt]="d.nom" class="rounded" style="width:90px;height:90px;object-fit:cover" />
-              }
-              <div class="flex-grow-1">
-                <div class="d-flex justify-content-between">
-                  <h6 class="mb-1">{{ d.nom }}</h6>
-                  <strong class="text-nowrap">{{ d.prix }} DT</strong>
-                </div>
-                <p class="small text-muted mb-1">{{ d.description }}</p>
-                <p class="small mb-1">
-                  <span class="badge bg-light text-dark border">{{ d.categorie.nom }}</span>
-                  chez <a [routerLink]="['/restaurants', d.restaurant._id]">{{ d.restaurant.nom }}</a>
-                </p>
-                @if (!d.disponible) { <span class="badge bg-secondary">Indisponible</span> }
-              </div>
-            </div>
+        <article class="dx-card" [class.is-off]="!d.disponible">
+          <div class="dx-card__img">
+            @if (d.image && d.image.startsWith('http')) {
+              <img [src]="d.image" [alt]="d.nom" loading="lazy" />
+            } @else {
+              <span class="dx-card__ph"><svg width="44" height="44"><use href="#i-pizza" /></svg></span>
+            }
+            <strong class="dx-card__price">{{ d.prix }} DT</strong>
+            @if (!d.disponible) { <em class="dx-card__off">Indisponible</em> }
           </div>
-        </div>
+          <div class="dx-card__body">
+            <span class="dx-card__cat">{{ d.categorie.nom }}</span>
+            <h3>{{ d.nom }}</h3>
+            <p>{{ d.description }}</p>
+            <a class="dx-card__resto" [routerLink]="['/restaurants', d.restaurant._id]">
+              <svg width="16" height="16"><use href="#i-pin" /></svg>
+              <span>chez <b>{{ d.restaurant.nom }}</b></span>
+              <svg class="dx-card__go" width="16" height="16"><use href="#i-arrow" /></svg>
+            </a>
+          </div>
+        </article>
       }
     </div>
 
     @if (totalPages() > 1) {
-      <nav class="d-flex justify-content-center align-items-center gap-3 mt-4">
-        <button class="btn btn-outline-primary" [disabled]="page() <= 1" (click)="goTo(page() - 1)">Précédent</button>
-        <span>Page {{ page() }} / {{ totalPages() }} ({{ total() }} résultats)</span>
-        <button class="btn btn-outline-primary" [disabled]="page() >= totalPages()" (click)="goTo(page() + 1)">Suivant</button>
+      <nav class="dx-pager" aria-label="Pagination">
+        <button type="button" [disabled]="page() <= 1" (click)="goTo(page() - 1)">Précédent</button>
+        <span>Page {{ page() }} / {{ totalPages() }}</span>
+        <button type="button" [disabled]="page() >= totalPages()" (click)="goTo(page() + 1)">Suivant</button>
       </nav>
     }
   `,

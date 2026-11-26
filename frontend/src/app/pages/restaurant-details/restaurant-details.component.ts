@@ -9,40 +9,35 @@ import { Dish } from '../../core/services/dish.service';
   selector: 'app-restaurant-details',
   imports: [FormsModule, RouterLink],
   template: `
-    <a routerLink="/restaurants" class="text-decoration-none">← Tous les restaurants</a>
+    <a routerLink="/restaurants" class="mn-back"><svg width="16" height="16"><use href="#i-back" /></svg> Tous les restaurants</a>
 
     @if (loading()) {
       <p class="mt-3">Chargement...</p>
     } @else if (error()) {
       <div class="alert alert-danger mt-3">{{ error() }}</div>
     } @else if (menu(); as m) {
-      <div class="card shadow-sm my-3">
-        <div class="row g-0">
-          @if (m.restaurant.image && m.restaurant.image.startsWith('http')) {
-            <div class="col-md-3">
-              <img [src]="m.restaurant.image" [alt]="m.restaurant.nom"
-                   class="img-fluid rounded-start h-100 w-100" style="object-fit:cover;min-height:140px" />
-            </div>
-          }
-          <div class="col">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-start">
-                <h2 class="card-title mb-1">{{ m.restaurant.nom }}</h2>
-                <span class="badge" [class]="m.restaurant.isOpen ? 'bg-success' : 'bg-secondary'">
-                  {{ m.restaurant.isOpen ? 'Ouvert' : 'Fermé' }}
-                </span>
-              </div>
-              <h6 class="text-muted">{{ m.restaurant.typeCuisine }}</h6>
-              <p class="card-text">{{ m.restaurant.description }}</p>
-              <ul class="list-unstyled small mb-0">
-                <li>📍 {{ m.restaurant.adresse }}</li>
-                @if (m.restaurant.horaires) { <li>🕒 {{ m.restaurant.horaires }}</li> }
-                <li>🚚 Livraison : {{ m.restaurant.fraisLivraison }} DT</li>
-              </ul>
-            </div>
+      <header class="mn-head" [class.has-img]="m.restaurant.image && m.restaurant.image.startsWith('http')">
+        @if (m.restaurant.image && m.restaurant.image.startsWith('http')) {
+          <img [src]="m.restaurant.image" [alt]="m.restaurant.nom" />
+        }
+        <div class="mn-head__in">
+          <div class="mn-head__tags">
+            <span class="mn-tag">{{ m.restaurant.typeCuisine }}</span>
+            <span class="mn-tag" [class.is-open]="m.restaurant.isOpen">
+              <i></i>{{ m.restaurant.isOpen ? 'Ouvert' : 'Fermé' }}
+            </span>
           </div>
+          <h1>{{ m.restaurant.nom }}</h1>
+          <p>{{ m.restaurant.description }}</p>
+          <ul>
+            <li><svg width="16" height="16"><use href="#i-pin" /></svg>{{ m.restaurant.adresse }}</li>
+            @if (m.restaurant.horaires) {
+              <li><svg width="16" height="16"><use href="#i-clock" /></svg>{{ m.restaurant.horaires }}</li>
+            }
+            <li><svg width="16" height="16"><use href="#i-truck" /></svg>Livraison {{ m.restaurant.fraisLivraison }} DT</li>
+          </ul>
         </div>
-      </div>
+      </header>
 
       @if (!m.restaurant.isOpen) {
         <div class="alert alert-warning">Ce restaurant est actuellement fermé.</div>
@@ -55,72 +50,73 @@ import { Dish } from '../../core/services/dish.service';
           {{ notice() }} <a routerLink="/cart" class="alert-link">Voir le panier</a>
         </div>
       }
-      <div class="row g-2 mb-3">
-        <div class="col-md-6">
-          <input class="form-control" placeholder="Rechercher un plat dans ce menu..."
+
+      <div class="mn-bar">
+        <div class="mn-search">
+          <svg width="18" height="18"><use href="#i-search" /></svg>
+          <input placeholder="Rechercher un plat dans ce menu..." aria-label="Rechercher dans le menu"
                  [ngModel]="search()" (ngModelChange)="search.set($event)" />
         </div>
+        @if (m.categories.length > 0) {
+          <div class="mn-chips">
+            <button type="button" [class.on]="selected() === ''" (click)="selected.set('')">Tout</button>
+            @for (c of m.categories; track c._id) {
+              <button type="button" [class.on]="selected() === c._id" (click)="selected.set(c._id)">{{ c.nom }}</button>
+            }
+          </div>
+        }
       </div>
 
-      @if (m.categories.length > 0) {
-        <div class="d-flex flex-wrap gap-2 mb-4">
-          <button class="btn btn-sm" [class]="selected() === '' ? 'btn-primary' : 'btn-outline-primary'"
-                  (click)="selected.set('')">Tout</button>
-          @for (c of m.categories; track c._id) {
-            <button class="btn btn-sm" [class]="selected() === c._id ? 'btn-primary' : 'btn-outline-primary'"
-                    (click)="selected.set(c._id)">{{ c.nom }}</button>
-          }
-        </div>
-      }
-
       @if (m.categories.length === 0) {
-        <div class="alert alert-info">Ce restaurant n'a pas encore publié son menu.</div>
+        <div class="dx-empty"><b>Ce restaurant n'a pas encore publié son menu.</b></div>
       } @else if (visible().length === 0) {
-        <div class="alert alert-info">Aucun plat ne correspond à votre recherche.</div>
+        <div class="dx-empty"><b>Aucun plat ne correspond à votre recherche.</b></div>
       }
 
       @for (c of visible(); track c._id) {
-        <section class="mb-4">
-          <h4 class="border-bottom pb-1">{{ c.nom }}</h4>
-          @if (c.description) { <p class="text-muted small">{{ c.description }}</p> }
-          <div class="row g-3">
+        <section class="mn-sec">
+          <div class="mn-sec__h">
+            <h2>{{ c.nom }}</h2>
+            <span>{{ c.dishes.length }}</span>
+          </div>
+          @if (c.description) { <p class="mn-sec__d">{{ c.description }}</p> }
+
+          <div class="mn-list">
             @for (d of c.dishes; track d._id) {
-              <div class="col-md-6">
-                <div class="card h-100" [class.opacity-50]="!d.disponible">
-                  <div class="card-body d-flex gap-3">
-                    @if (d.image && d.image.startsWith('http')) {
-                      <img [src]="d.image" [alt]="d.nom" class="rounded"
-                           style="width:90px;height:90px;object-fit:cover" />
-                    }
-                    <div class="flex-grow-1">
-                      <div class="d-flex justify-content-between">
-                        <h6 class="mb-1">{{ d.nom }}</h6>
-                        <strong class="text-nowrap">{{ d.prix }} DT</strong>
-                      </div>
-                      <p class="small text-muted mb-2">{{ d.description }}</p>
-                      @if (d.disponible) {
-                        <span class="badge bg-success-subtle text-success-emphasis">Disponible</span>
-                      } @else {
-                        <span class="badge bg-secondary">Indisponible</span>
-                      }
-                      <!-- Personne 3 (panier) : ajouter ici le bouton « Ajouter au panier »,
-                           à afficher seulement si d.disponible (règle : plat indisponible = non commandable). -->
-                                                 @if (d.disponible) {
-                        @if (auth.user()?.role === 'client') {
-                          @if (m.restaurant.isOpen) {
-                            <button class="btn btn-sm btn-primary ms-2" (click)="addToCart(d)">
-                              🛒 Ajouter au panier
-                              @if (cart.quantiteOf(d._id) > 0) { ({{ cart.quantiteOf(d._id) }}) }
-                            </button>
-                          }
-                        } @else if (!auth.isLoggedIn()) {
-                          <a class="btn btn-sm btn-outline-primary ms-2" routerLink="/login">Se connecter pour commander</a>
+              <article class="mn-dish" [class.is-off]="!d.disponible">
+                <div class="mn-dish__img">
+                  @if (d.image && d.image.startsWith('http')) {
+                    <img [src]="d.image" [alt]="d.nom" loading="lazy" />
+                  } @else {
+                    <svg width="30" height="30"><use href="#i-pizza" /></svg>
+                  }
+                </div>
+                <div class="mn-dish__txt">
+                  <div class="mn-dish__row">
+                    <h3>{{ d.nom }}</h3>
+                    <i class="mn-dots"></i>
+                    <strong>{{ d.prix }} DT</strong>
+                  </div>
+                  <p>{{ d.description }}</p>
+                  <div class="mn-dish__foot">
+                    @if (d.disponible) {
+                      @if (auth.user()?.role === 'client') {
+                        @if (m.restaurant.isOpen) {
+                          <button class="mn-add" type="button" (click)="addToCart(d)">
+                            <svg width="16" height="16"><use href="#i-bag" /></svg>
+                            Ajouter
+                            @if (cart.quantiteOf(d._id) > 0) { <b>{{ cart.quantiteOf(d._id) }}</b> }
+                          </button>
                         }
+                      } @else if (!auth.isLoggedIn()) {
+                        <a class="mn-add mn-add--ghost" routerLink="/login">Se connecter pour commander</a>
                       }
-                    </div>
+                    } @else {
+                      <span class="mn-off">Indisponible</span>
+                    }
                   </div>
                 </div>
-              </div>
+              </article>
             }
           </div>
         </section>
