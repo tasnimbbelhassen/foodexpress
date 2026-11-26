@@ -5,17 +5,21 @@ import { Menu, RestaurantService } from '../../core/services/restaurant.service'
 import { AuthService } from '../../core/services/auth.service';
 import { CartService } from '../../core/services/cart.service';
 import { Dish } from '../../core/services/dish.service';
+
 @Component({
   selector: 'app-restaurant-details',
   imports: [FormsModule, RouterLink],
   template: `
+    <!-- Lien de retour vers la liste des restaurants -->
     <a routerLink="/restaurants" class="mn-back"><svg width="16" height="16"><use href="#i-back" /></svg> Tous les restaurants</a>
 
+    <!-- Gestion du chargement, des erreurs et de l'affichage du menu -->
     @if (loading()) {
       <p class="mt-3">Chargement...</p>
     } @else if (error()) {
       <div class="alert alert-danger mt-3">{{ error() }}</div>
     } @else if (menu(); as m) {
+      <!-- Informations générales du restaurant -->
       <header class="mn-head" [class.has-img]="m.restaurant.image && m.restaurant.image.startsWith('http')">
         @if (m.restaurant.image && m.restaurant.image.startsWith('http')) {
           <img [src]="m.restaurant.image" [alt]="m.restaurant.nom" />
@@ -39,6 +43,7 @@ import { Dish } from '../../core/services/dish.service';
         </div>
       </header>
 
+      <!-- Messages concernant l'état du restaurant et du panier -->
       @if (!m.restaurant.isOpen) {
         <div class="alert alert-warning">Ce restaurant est actuellement fermé.</div>
       }
@@ -51,6 +56,7 @@ import { Dish } from '../../core/services/dish.service';
         </div>
       }
 
+      <!-- Recherche de plats et filtres par catégorie -->
       <div class="mn-bar">
         <div class="mn-search">
           <svg width="18" height="18"><use href="#i-search" /></svg>
@@ -67,12 +73,14 @@ import { Dish } from '../../core/services/dish.service';
         }
       </div>
 
+      <!-- Messages si le menu est vide ou si aucun plat ne correspond -->
       @if (m.categories.length === 0) {
         <div class="dx-empty"><b>Ce restaurant n'a pas encore publié son menu.</b></div>
       } @else if (visible().length === 0) {
         <div class="dx-empty"><b>Aucun plat ne correspond à votre recherche.</b></div>
       }
 
+      <!-- Affichage des catégories et de leurs plats -->
       @for (c of visible(); track c._id) {
         <section class="mn-sec">
           <div class="mn-sec__h">
@@ -99,6 +107,7 @@ import { Dish } from '../../core/services/dish.service';
                   </div>
                   <p>{{ d.description }}</p>
                   <div class="mn-dish__foot">
+                    <!-- Actions disponibles selon le rôle et la disponibilité du plat -->
                     @if (d.disponible) {
                       @if (auth.user()?.role === 'client') {
                         @if (m.restaurant.isOpen) {
@@ -127,8 +136,10 @@ import { Dish } from '../../core/services/dish.service';
 export class RestaurantDetailsComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(RestaurantService);
-    auth = inject(AuthService);
+  auth = inject(AuthService);
   cart = inject(CartService);
+
+  // États du menu, de la recherche et des messages
   notice = signal('');
   cartError = signal('');
   menu = signal<Menu | null>(null);
@@ -137,7 +148,7 @@ export class RestaurantDetailsComponent implements OnInit {
   search = signal('');
   selected = signal(''); // '' = toutes les catégories
 
-  // Catégories filtrées (recherche + onglet), sans les catégories vides
+  // Catégories filtrées selon la recherche et la catégorie sélectionnée
   visible = computed(() => {
     const m = this.menu();
     if (!m) return [];
@@ -152,7 +163,8 @@ export class RestaurantDetailsComponent implements OnInit {
       }))
       .filter((c) => c.dishes.length > 0);
   });
-    // Un panier ne contient que les plats d'un seul restaurant : on demande confirmation avant de le remplacer
+
+  // Ajout d'un plat au panier avec confirmation si un autre restaurant est déjà sélectionné
   addToCart(dish: Dish, remplacer = false) {
     const r = this.menu()?.restaurant;
     if (!r || !dish.disponible || !r.isOpen) return;
@@ -171,6 +183,8 @@ export class RestaurantDetailsComponent implements OnInit {
       },
     });
   }
+
+  // Chargement du menu à partir de l'identifiant du restaurant dans l'URL
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.service.getMenu(id).subscribe({

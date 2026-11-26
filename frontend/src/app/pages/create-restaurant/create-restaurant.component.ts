@@ -11,6 +11,7 @@ import { RestaurantService } from '../../core/services/restaurant.service';
       <div class="col-md-7">
         <h2 class="mb-3">Créer mon restaurant</h2>
 
+        <!-- Vérification de l'existence d'un restaurant -->
         @if (checking()) {
           <p>Chargement...</p>
         } @else if (hasRestaurant()) {
@@ -19,6 +20,7 @@ import { RestaurantService } from '../../core/services/restaurant.service';
           </div>
           <a class="btn btn-primary" routerLink="/restaurants">Voir les restaurants</a>
         } @else {
+          <!-- Formulaire de création du restaurant -->
           <p class="text-muted">Dernière étape : renseignez les informations de votre restaurant.</p>
           @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
           <form (ngSubmit)="submit()">
@@ -72,16 +74,22 @@ export class CreateRestaurantComponent implements OnInit {
   private service = inject(RestaurantService);
   private router = inject(Router);
 
+  // Types de cuisine proposés dans le formulaire
   cuisines = ['Italienne', 'Tunisienne', 'Fast-food', 'Pizza'];
+
+  // Données du formulaire
   form = {
     nom: '', description: '', adresse: '', typeCuisine: '',
     image: '', fraisLivraison: 0, horaires: '', isOpen: true,
   };
+
+  // États de vérification, de création et de gestion des erreurs
   checking = signal(true);
   hasRestaurant = signal(false);
   loading = signal(false);
   error = signal('');
 
+  // Vérifie si le restaurateur possède déjà un restaurant
   ngOnInit() {
     this.service.getMine().subscribe({
       next: (r) => {
@@ -92,6 +100,7 @@ export class CreateRestaurantComponent implements OnInit {
     });
   }
 
+  // Vérifie les champs obligatoires et crée le restaurant
   submit() {
     this.error.set('');
     if (!this.form.nom.trim() || !this.form.adresse.trim() || !this.form.typeCuisine) {

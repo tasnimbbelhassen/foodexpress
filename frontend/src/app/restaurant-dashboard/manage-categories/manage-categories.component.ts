@@ -10,15 +10,18 @@ import { MenuCategory, Restaurant, RestaurantService } from '../../core/services
   template: `
     <h2 class="mb-3">Catégories du menu</h2>
 
+    <!-- Vérification du chargement et de l'existence du restaurant -->
     @if (loading()) {
       <p>Chargement...</p>
     } @else if (!restaurant()) {
       <div class="alert alert-info">Créez d'abord votre restaurant pour gérer son menu.</div>
       <a class="btn btn-primary" routerLink="/create-restaurant">Créer mon restaurant</a>
     } @else {
+      <!-- Affichage des messages d'erreur et de confirmation -->
       @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
       @if (success()) { <div class="alert alert-success">{{ success() }}</div> }
 
+      <!-- Formulaire d'ajout ou de modification d'une catégorie -->
       <div class="card mb-4">
         <div class="card-body">
           <h5 class="card-title">{{ editingId() ? 'Modifier la catégorie' : 'Ajouter une catégorie' }}</h5>
@@ -41,6 +44,7 @@ import { MenuCategory, Restaurant, RestaurantService } from '../../core/services
         </div>
       </div>
 
+      <!-- Liste des catégories et actions disponibles -->
       @if (categories().length === 0) {
         <div class="alert alert-info">Aucune catégorie pour le moment. Ajoutez-en une pour pouvoir créer des plats.</div>
       } @else {
@@ -77,6 +81,7 @@ export class ManageCategoriesComponent implements OnInit {
   private restaurants = inject(RestaurantService);
   private service = inject(CategoryService);
 
+  // États du restaurant, des catégories et des formulaires
   restaurant = signal<Restaurant | null>(null);
   categories = signal<MenuCategory[]>([]);
   loading = signal(true);
@@ -86,6 +91,7 @@ export class ManageCategoriesComponent implements OnInit {
   editingId = signal<string | null>(null);
   form = { nom: '', description: '' };
 
+  // Récupération du restaurant au chargement du composant
   ngOnInit() {
     this.restaurants.getMine().subscribe({
       next: (r) => {
@@ -100,6 +106,7 @@ export class ManageCategoriesComponent implements OnInit {
     });
   }
 
+  // Chargement des catégories du menu
   private reload() {
     this.restaurants.getMenu(this.restaurant()!._id).subscribe({
       next: (m) => {
@@ -113,6 +120,7 @@ export class ManageCategoriesComponent implements OnInit {
     });
   }
 
+  // Ajout ou modification d'une catégorie
   submit() {
     this.error.set('');
     this.success.set('');
@@ -135,6 +143,7 @@ export class ManageCategoriesComponent implements OnInit {
     });
   }
 
+  // Préparation du formulaire pour modifier une catégorie
   edit(c: MenuCategory) {
     this.editingId.set(c._id);
     this.form = { nom: c.nom, description: c.description };
@@ -142,11 +151,13 @@ export class ManageCategoriesComponent implements OnInit {
     this.success.set('');
   }
 
+  // Réinitialisation du formulaire
   cancelEdit() {
     this.editingId.set(null);
     this.form = { nom: '', description: '' };
   }
 
+  // Suppression d'une catégorie après confirmation
   remove(c: MenuCategory) {
     if (!confirm(`Supprimer la catégorie « ${c.nom} » ?`)) return;
     this.error.set('');

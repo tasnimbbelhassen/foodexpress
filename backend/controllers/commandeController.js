@@ -5,9 +5,6 @@ const { HttpError, isId, getManagedRestaurant } = require('../utils/ownership');
 // Liste des statuts valides : en_attente, acceptee, livre, annulee
 const STATUTS = Object.keys(Commande.TRANSITIONS);
 
-// ===========================================================================
-// FONCTIONS UTILITAIRES (non exportées)
-// ===========================================================================
 
 // Lit le filtre optionnel ?statut=... dans l'URL.
 // Retourne {} (pas de filtre) ou { statut: 'xxx' }. Une valeur invalide donne une erreur 400.
@@ -21,14 +18,14 @@ const lireFiltreStatut = (req) => {
 };
 
 // Ajoute à chaque commande la liste de ses lignes (plats commandés).
-// Une seule requête pour toutes les commandes (au lieu d'une requête par commande).
+
 const avecLignes = async (commandes) => {
-  // 1) Récupérer toutes les lignes dont la commande est dans la liste
+
   const lignes = await LigneCommande.find({ commande: { $in: commandes.map((c) => c._id) } }).sort({
     createdAt: 1,
   });
 
-  // 2) Regrouper les lignes par identifiant de commande
+
   const parCommande = new Map();
   for (const l of lignes) {
     const cle = String(l.commande);
@@ -41,7 +38,7 @@ const avecLignes = async (commandes) => {
 };
 
 // Champs à remplacer par les vrais documents (« populate ») :
-// le nom du restaurant et les coordonnées du client (utiles pour la livraison).
+
 const POPULATE = [
   { path: 'restaurant', select: 'nom adresse' },
   { path: 'client', select: 'nom prenom telephone' },
@@ -60,10 +57,6 @@ const vue = async (commande) => {
 };
 
 // Vérifie que l'utilisateur connecté a le droit d'accéder à la commande, puis la retourne.
-//  - client        : uniquement ses propres commandes
-//  - restaurateur  : uniquement les commandes de SON restaurant
-// Dans les cas interdits on répond 404 (et non 403) pour ne pas révéler
-// qu'une commande appartenant à quelqu'un d'autre existe.
 const commandeAutorisee = async (user, id) => {
   if (!isId(id)) throw new HttpError(400, 'Identifiant invalide');
 
@@ -82,12 +75,8 @@ const commandeAutorisee = async (user, id) => {
   return commande;
 };
 
-// ===========================================================================
-// CÔTÉ CLIENT
-// ===========================================================================
-
 // GET /api/commandes/mes-commandes[?statut=en_attente]
-// Tâche 1 : historique des commandes du client connecté (la plus récente d'abord).
+
 exports.historique = async (req, res) => {
   const filtre = { client: req.user._id, ...lireFiltreStatut(req) };
   res.json(await lister(filtre));
@@ -103,10 +92,6 @@ exports.annuler = async (req, res) => {
   await commande.annuler();
   res.json(await vue(commande));
 };
-
-// ===========================================================================
-// CÔTÉ RESTAURATEUR
-// ===========================================================================
 
 // GET /api/commandes/restaurant[?statut=en_attente]
 // Tâche 4 : commandes reçues par MON restaurant.
@@ -155,10 +140,6 @@ exports.modifierStatut = async (req, res) => {
   await commande.changerStatut(statut);
   res.json(await vue(commande));
 };
-
-// ===========================================================================
-// CLIENT ET RESTAURATEUR
-// ===========================================================================
 
 // GET /api/commandes/:id
 // Tâches 2 et 5 : détail d'une commande.

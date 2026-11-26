@@ -10,7 +10,11 @@ import { AuthService } from '../../core/services/auth.service';
     <div class="row justify-content-center">
       <div class="col-md-5">
         <h2 class="mb-3">Connexion</h2>
+
+        <!-- Affichage des erreurs -->
         @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+
+        <!-- Formulaire de connexion -->
         <form (ngSubmit)="submit()">
           <div class="mb-3">
             <label class="form-label">Email</label>
@@ -24,6 +28,8 @@ import { AuthService } from '../../core/services/auth.service';
             {{ loading() ? 'Connexion...' : 'Se connecter' }}
           </button>
         </form>
+
+        <!-- Lien vers l'inscription -->
         <p class="mt-3">Pas de compte ? <a routerLink="/register">S'inscrire</a></p>
       </div>
     </div>
@@ -33,11 +39,13 @@ export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
 
+  // Données du formulaire et états de la connexion
   email = '';
   password = '';
   loading = signal(false);
   error = signal('');
 
+  // Authentification et redirection après connexion
   submit() {
     this.error.set('');
     this.loading.set(true);

@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [FormsModule],
   template: `
     <div class="row g-4">
+      <!-- Formulaire de modification du profil -->
       <div class="col-md-6">
         <h2 class="mb-3">Mon profil</h2>
         @if (profileMsg()) { <div class="alert alert-success">{{ profileMsg() }}</div> }
@@ -32,6 +33,7 @@ import { AuthService } from '../../core/services/auth.service';
         </form>
       </div>
 
+      <!-- Formulaire de changement du mot de passe -->
       <div class="col-md-6">
         <h2 class="mb-3">Mot de passe</h2>
         @if (pwdMsg()) { <div class="alert alert-success">{{ pwdMsg() }}</div> }
@@ -58,15 +60,18 @@ import { AuthService } from '../../core/services/auth.service';
 export class ProfileComponent implements OnInit {
   private auth = inject(AuthService);
 
+  // Données du profil et du formulaire de mot de passe
   email = signal('');
   form = { nom: '', prenom: '', telephone: '' };
   pwd = { ancienPassword: '', nouveauPassword: '', confirmation: '' };
 
+  // Messages de succès et d'erreur
   profileMsg = signal('');
   profileErr = signal('');
   pwdMsg = signal('');
   pwdErr = signal('');
 
+  // Chargement des informations du profil
   ngOnInit() {
     this.auth.getProfile().subscribe((u) => {
       this.email.set(u.email);
@@ -74,6 +79,7 @@ export class ProfileComponent implements OnInit {
     });
   }
 
+  // Enregistrement des modifications du profil
   saveProfile() {
     this.profileMsg.set('');
     this.profileErr.set('');
@@ -83,6 +89,7 @@ export class ProfileComponent implements OnInit {
     });
   }
 
+  // Modification du mot de passe
   savePassword() {
     this.pwdMsg.set('');
     this.pwdErr.set('');

@@ -7,6 +7,7 @@ import { DishSearchItem, DishService } from '../../core/services/dish.service';
   selector: 'app-search-dishes',
   imports: [FormsModule, RouterLink],
   template: `
+    <!-- Barre de recherche des plats -->
     <section class="dx-hero">
       <h1>Quel plat vous fait <span>envie</span> ?</h1>
       <p>Cherchez parmi tous les menus, puis filez directement chez le restaurant.</p>
@@ -18,12 +19,14 @@ import { DishSearchItem, DishService } from '../../core/services/dish.service';
         <button type="button" (click)="applyFilters()">Rechercher</button>
       </div>
 
+      <!-- Filtre pour afficher uniquement les plats disponibles -->
       <label class="dx-switch" for="dispo">
         <input type="checkbox" id="dispo" [(ngModel)]="onlyAvailable" (ngModelChange)="applyFilters()" />
         <i></i> Disponibles uniquement
       </label>
     </section>
 
+    <!-- Affichage des erreurs et de l'état de chargement -->
     @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
     @if (loading()) { <p class="dx-state">Chargement...</p> }
     @if (!loading() && !error() && dishes().length === 0) {
@@ -34,6 +37,7 @@ import { DishSearchItem, DishService } from '../../core/services/dish.service';
       </div>
     }
 
+    <!-- Titre et nombre de plats trouvés -->
     @if (!loading() && dishes().length > 0) {
       <div class="dx-listh">
         <h2>Tous les plats</h2>
@@ -41,6 +45,7 @@ import { DishSearchItem, DishService } from '../../core/services/dish.service';
       </div>
     }
 
+    <!-- Affichage des résultats sous forme de cartes -->
     <div class="dx-grid">
       @for (d of dishes(); track d._id) {
         <article class="dx-card" [class.is-off]="!d.disponible">
@@ -67,6 +72,7 @@ import { DishSearchItem, DishService } from '../../core/services/dish.service';
       }
     </div>
 
+    <!-- Navigation entre les pages de résultats -->
     @if (totalPages() > 1) {
       <nav class="dx-pager" aria-label="Pagination">
         <button type="button" [disabled]="page() <= 1" (click)="goTo(page() - 1)">Précédent</button>
@@ -77,12 +83,15 @@ import { DishSearchItem, DishService } from '../../core/services/dish.service';
   `,
 })
 export class SearchDishesComponent implements OnInit {
+  // Service de recherche des plats
   private service = inject(DishService);
 
+  // Paramètres de recherche et de filtrage
   search = '';
   onlyAvailable = false;
   limit = 10;
 
+  // Résultats et états de la recherche
   page = signal(1);
   dishes = signal<DishSearchItem[]>([]);
   total = signal(0);
@@ -90,20 +99,24 @@ export class SearchDishesComponent implements OnInit {
   loading = signal(false);
   error = signal('');
 
+  // Chargement initial des plats
   ngOnInit() {
     this.load();
   }
 
+  // Applique les filtres et revient à la première page
   applyFilters() {
     this.page.set(1);
     this.load();
   }
 
+  // Change la page des résultats
   goTo(p: number) {
     this.page.set(p);
     this.load();
   }
 
+  // Récupère les plats correspondant aux critères de recherche
   load() {
     this.loading.set(true);
     this.error.set('');

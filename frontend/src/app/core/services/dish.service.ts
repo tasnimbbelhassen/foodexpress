@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { API_URL } from '../api';
 
+// Structure d'un plat
 export interface Dish {
   _id: string;
   nom: string;
@@ -13,11 +14,13 @@ export interface Dish {
   restaurant: string;
 }
 
-// Résultat de GET /api/dishes : restaurant et catégorie sont "populés"
+// Résultat de recherche avec les informations du restaurant et de la catégorie
 export interface DishSearchItem extends Omit<Dish, 'categorie' | 'restaurant'> {
   categorie: { _id: string; nom: string };
   restaurant: { _id: string; nom: string; typeCuisine: string; isOpen: boolean };
 }
+
+// Structure des résultats paginés
 export interface DishPage {
   data: DishSearchItem[];
   page: number;
@@ -26,6 +29,7 @@ export interface DishPage {
   totalPages: number;
 }
 
+// Données nécessaires pour créer ou modifier un plat
 export interface DishForm {
   nom: string;
   description: string;
@@ -39,6 +43,7 @@ export interface DishForm {
 export class DishService {
   private http = inject(HttpClient);
 
+  // Recherche des plats avec des filtres et des paramètres de pagination
   search(params: Record<string, string | number | boolean>) {
     let p = new HttpParams();
     Object.entries(params).forEach(([k, v]) => {
@@ -47,18 +52,22 @@ export class DishService {
     return this.http.get<DishPage>(`${API_URL}/dishes`, { params: p });
   }
 
+  // Création d'un nouveau plat
   create(data: DishForm) {
     return this.http.post<Dish>(`${API_URL}/dishes`, data);
   }
 
+  // Modification des informations d'un plat
   update(id: string, data: Partial<DishForm>) {
     return this.http.put<Dish>(`${API_URL}/dishes/${id}`, data);
   }
 
+  // Modification de la disponibilité d'un plat
   setAvailability(id: string, disponible: boolean) {
     return this.http.patch<Dish>(`${API_URL}/dishes/${id}/disponibilite`, { disponible });
   }
 
+  // Suppression d'un plat
   remove(id: string) {
     return this.http.delete<{ message: string }>(`${API_URL}/dishes/${id}`);
   }

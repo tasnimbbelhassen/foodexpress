@@ -1,21 +1,26 @@
-const mongoose = require('mongoose');
 
+const mongoose = require('mongoose'); // Bibliothèque pour gérer MongoDB
+
+// Arrondit un nombre à deux chiffres après la virgule (ex : 12.567 → 12.57)
 const round2 = (n) => Math.round(n * 100) / 100;
 
-// Classe Panier : un seul panier par client (Utilisateur 1 --- 0..1 Panier) pour un seul restaurant.
+// Définition du schéma Panier : chaque client possède un seul panier associé à un restaurant
 const panierSchema = new mongoose.Schema(
   {
+    // Référence vers le client propriétaire du panier (un panier maximum par client)
     client: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-    restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
-    adresseLivraison: { type: String, trim: true, default: '' },
-    sousTotal: { type: Number, default: 0, min: 0 },
-    fraisLivraison: { type: Number, default: 0, min: 0 },
-    total: { type: Number, default: 0, min: 0 },
+
+    restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant', required: true }, // Restaurant concerné
+
+    adresseLivraison: { type: String, trim: true, default: '' }, // Adresse de livraison
+
+    sousTotal: { type: Number, default: 0, min: 0 }, // Somme des prix des articles
+    fraisLivraison: { type: Number, default: 0, min: 0 }, // Frais de livraison
+    total: { type: Number, default: 0, min: 0 }, // Montant total du panier
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true }, id: false }
 );
 
-// -/total : dérivé (sousTotal + fraisLivraison)
+// Le total du panier est calculé à partir du sous-total et des frais de livraison.
 
-
-module.exports = mongoose.model('Panier', panierSchema);
+module.exports = mongoose.model('Panier', panierSchema); // Création et exportation du modèle Panier

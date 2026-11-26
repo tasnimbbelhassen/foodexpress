@@ -13,6 +13,7 @@ import { Commande } from '../../core/services/commande.service';
     <h2 class="mb-3">🛒 Mon panier</h2>
 
     @if (confirmed(); as commande) {
+      <!-- Confirmation de la commande -->
       <div class="alert alert-success">
         <h5 class="alert-heading">Commande envoyée ✅</h5>
         <p class="mb-1">
@@ -26,9 +27,11 @@ import { Commande } from '../../core/services/commande.service';
     } @else if (loading()) {
       <p>Chargement...</p>
     } @else if (cart.isEmpty()) {
+      <!-- Affichage si le panier est vide -->
       <div class="alert alert-info">Votre panier est vide.</div>
       <a routerLink="/restaurants" class="btn btn-primary">Voir les restaurants</a>
     } @else if (cart.panier(); as p) {
+      <!-- Informations sur le restaurant -->
       @if (p.restaurant) {
         <p class="text-muted">
           Restaurant : <a [routerLink]="['/restaurants', p.restaurant._id]">{{ p.restaurant.nom }}</a>
@@ -36,6 +39,7 @@ import { Commande } from '../../core/services/commande.service';
         </p>
       }
 
+      <!-- Liste des plats du panier -->
       <div class="table-responsive">
         <table class="table align-middle">
           <thead>
@@ -56,6 +60,7 @@ import { Commande } from '../../core/services/commande.service';
                 </td>
                 <td class="text-end text-nowrap">{{ l.plat.prix | number: '1.2-2' }} DT</td>
                 <td class="text-center">
+                  <!-- Boutons de modification de la quantité -->
                   <div class="btn-group btn-group-sm" role="group">
                     <button class="btn btn-outline-secondary" [disabled]="busy() || l.quantite <= 1"
                             (click)="changer(l._id, -1)" aria-label="Diminuer">−</button>
@@ -74,6 +79,7 @@ import { Commande } from '../../core/services/commande.service';
         </table>
       </div>
 
+      <!-- Adresse de livraison et récapitulatif des prix -->
       <div class="row g-4">
         <div class="col-md-7">
           <label class="form-label fw-semibold" for="adresse">Adresse de livraison *</label>
@@ -99,6 +105,7 @@ import { Commande } from '../../core/services/commande.service';
         </div>
       </div>
 
+      <!-- Messages d'erreur et actions du panier -->
       @if (error()) {
         <div class="alert alert-danger mt-3">{{ error() }}</div>
       }
@@ -115,6 +122,7 @@ import { Commande } from '../../core/services/commande.service';
 export class CartComponent implements OnInit {
   cart = inject(CartService);
 
+  // État du panier et de la commande
   max = MAX_QUANTITE;
   adresse = signal('');
   loading = signal(true);
@@ -122,6 +130,7 @@ export class CartComponent implements OnInit {
   error = signal('');
   confirmed = signal<Commande | null>(null);
 
+  // Chargement initial du panier
   ngOnInit() {
     this.cart.charger().subscribe({
       next: (p) => {
@@ -151,14 +160,17 @@ export class CartComponent implements OnInit {
     });
   }
 
+  // Modifier la quantité d'un plat
   changer(ligneId: string, delta: 1 | -1) {
     this.run(this.cart.modifierQuantite(ligneId, delta));
   }
 
+  // Supprimer un plat du panier
   supprimer(ligneId: string) {
     this.run(this.cart.supprimerPlat(ligneId));
   }
 
+  // Vider complètement le panier
   vider() {
     if (confirm('Vider tout le panier ?')) this.run(this.cart.viderPanier());
   }
@@ -171,6 +183,7 @@ export class CartComponent implements OnInit {
     }
   }
 
+  // Validation et envoi de la commande
   passerCommande() {
     const adresse = this.adresse().trim();
     if (!adresse) {

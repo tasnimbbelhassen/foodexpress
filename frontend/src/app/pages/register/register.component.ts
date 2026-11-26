@@ -10,7 +10,11 @@ import { AuthService } from '../../core/services/auth.service';
     <div class="row justify-content-center">
       <div class="col-md-6">
         <h2 class="mb-3">Inscription</h2>
+
+        <!-- Affichage des erreurs -->
         @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+
+        <!-- Formulaire d'inscription -->
         <form (ngSubmit)="submit()">
           <div class="row">
             <div class="col-md-6 mb-3">
@@ -50,6 +54,8 @@ import { AuthService } from '../../core/services/auth.service';
             {{ loading() ? 'Création...' : 'Créer mon compte' }}
           </button>
         </form>
+
+        <!-- Lien vers la connexion -->
         <p class="mt-3">Déjà inscrit ? <a routerLink="/login">Se connecter</a></p>
       </div>
     </div>
@@ -59,6 +65,7 @@ export class RegisterComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
 
+  // Données saisies dans le formulaire
   form = {
     nom: '',
     prenom: '',
@@ -68,9 +75,12 @@ export class RegisterComponent {
     confirmation: '',
     role: 'client',
   };
+
+  // États de l'inscription
   loading = signal(false);
   error = signal('');
 
+  // Vérification des champs et création du compte
   submit() {
     this.error.set('');
     if (Object.values(this.form).some((v) => !v.trim())) {

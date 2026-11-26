@@ -11,15 +11,18 @@ import { RestaurantService } from '../../core/services/restaurant.service';
       <div class="col-md-7">
         <h2 class="mb-3">Mon restaurant</h2>
 
+        <!-- Vérification du chargement et de l'existence du restaurant -->
         @if (loading()) {
           <p>Chargement...</p>
         } @else if (!restaurantId) {
           <div class="alert alert-info">Vous n'avez pas encore de restaurant.</div>
           <a class="btn btn-primary" routerLink="/create-restaurant">Créer mon restaurant</a>
         } @else {
+          <!-- Affichage des messages d'erreur et de confirmation -->
           @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
           @if (success()) { <div class="alert alert-success">{{ success() }}</div> }
 
+          <!-- Formulaire de modification des informations du restaurant -->
           <form (ngSubmit)="submit()">
             <div class="mb-3">
               <label class="form-label">Nom *</label>
@@ -73,6 +76,7 @@ import { RestaurantService } from '../../core/services/restaurant.service';
 export class ManageRestaurantComponent implements OnInit {
   private service = inject(RestaurantService);
 
+  // Types de cuisine proposés dans le formulaire
   cuisines = ['Italienne', 'Tunisienne', 'Fast-food', 'Pizza'];
   restaurantId = '';
   form = {
@@ -80,11 +84,13 @@ export class ManageRestaurantComponent implements OnInit {
     image: '', fraisLivraison: 0, horaires: '', isOpen: true,
   };
 
+  // États du chargement, de l'enregistrement et des messages
   loading = signal(true);
   saving = signal(false);
   error = signal('');
   success = signal('');
 
+  // Récupération des informations du restaurant existant
   ngOnInit() {
     this.service.getMine().subscribe({
       next: (r) => {
@@ -106,6 +112,7 @@ export class ManageRestaurantComponent implements OnInit {
     });
   }
 
+  // Vérification et enregistrement des modifications
   submit() {
     this.error.set('');
     this.success.set('');

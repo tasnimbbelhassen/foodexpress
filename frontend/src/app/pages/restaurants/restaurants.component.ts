@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Restaurant, RestaurantService } from '../../core/services/restaurant.service';
 import { FooterComponent } from '../../shared/footer/footer.component';
+
 @Component({
   selector: 'app-restaurants',
   imports: [FormsModule, RouterLink, FooterComponent],
   template: `
-    <!-- ================= HERO ================= -->
+    <!-- Section d'accueil avec recherche de restaurants -->
     <section class="fx-hero">
       <div class="fx-hero__text">
         <div class="fx-loc"><svg width="28" height="28"><use href="#i-pin" /></svg>Livraison en Tunisie</div>
@@ -25,6 +26,7 @@ import { FooterComponent } from '../../shared/footer/footer.component';
         </div>
       </div>
 
+      <!-- Illustrations décoratives de la page -->
       <div class="fx-comp" aria-hidden="true">
         <svg class="fx-lemon fx-lemon--a"><use href="#lemon" /></svg>
         <svg class="fx-lemon fx-lemon--b"><use href="#lemon" /></svg>
@@ -34,7 +36,8 @@ import { FooterComponent } from '../../shared/footer/footer.component';
         <svg class="fx-lemon fx-lemon--c"><use href="#lemon" /></svg>
       </div>
     </section>
-    <!-- ================= CATEGORIES (section pleine largeur épinglée, tout défile vers la gauche) ================= -->
+
+    <!-- Catégories avec défilement horizontal contrôlé par le scroll vertical -->
     <div #hsOuter class="fx-hs" (window:scroll)="hscroll(hsOuter)" (window:resize)="hscroll(hsOuter)">
       <div class="fx-hs__pin">
         <div class="fx-hs__view">
@@ -60,7 +63,8 @@ import { FooterComponent } from '../../shared/footer/footer.component';
         <div class="fx-hs__bar"><i></i></div>
       </div>
     </div>
-    <!-- ================= COMMENT ÇA MARCHE (titre fixe à gauche, timeline qui se remplit au scroll) ================= -->
+
+    <!-- Présentation des étapes de commande -->
     <section #how id="comment-ca-marche" class="fx-how" (window:scroll)="howScroll(how)" (window:resize)="howScroll(how)">
       <div class="fx-how__intro">
         <h2>Comment ça<br />marche.</h2>
@@ -70,6 +74,7 @@ import { FooterComponent } from '../../shared/footer/footer.component';
         </button>
       </div>
 
+      <!-- Timeline des différentes étapes -->
       <div class="fx-how__steps">
         <div class="fx-how__rail" aria-hidden="true"><i></i></div>
         @for (s of howSteps; track s.title) {
@@ -93,7 +98,7 @@ import { FooterComponent } from '../../shared/footer/footer.component';
       </div>
     </section>
 
-    <!-- ================= LISTE ================= -->
+    <!-- Liste des restaurants avec filtres et pagination -->
     <section #liste class="fx-list">
       <h2 class="fx-h2">Ouverts près de vous</h2>
 
@@ -112,6 +117,7 @@ import { FooterComponent } from '../../shared/footer/footer.component';
         </select>
       </div>
 
+      <!-- Affichage des états de chargement et des résultats -->
       @if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
       @if (loading()) { <p class="text-muted">Chargement...</p> }
 
@@ -119,6 +125,7 @@ import { FooterComponent } from '../../shared/footer/footer.component';
         <div class="alert alert-info">Aucun restaurant trouvé.</div>
       }
 
+      <!-- Cartes des restaurants -->
       <div class="fx-grid">
         @for (r of restaurants(); track r._id) {
           <article class="fx-card" [class.closed]="!r.isOpen">
@@ -152,6 +159,7 @@ import { FooterComponent } from '../../shared/footer/footer.component';
         }
       </div>
 
+      <!-- Navigation entre les pages de résultats -->
       @if (totalPages() > 1) {
         <nav class="d-flex justify-content-center align-items-center gap-3 mt-4">
           <button class="btn btn-outline-primary" [disabled]="page() <= 1" (click)="goTo(page() - 1)">Précédent</button>
@@ -165,7 +173,8 @@ import { FooterComponent } from '../../shared/footer/footer.component';
 
 })
 export class RestaurantsComponent implements OnInit {
-      // Mets tes photos dans public/categories/
+  // Images et filtres des catégories de restaurants
+  // Mets tes photos dans public/categories/
   // "cuisine" doit être exactement le nom de cuisine de tes restaurants ('' = tout voir)
   categories = [
     { label: 'Pizza', cuisine: 'Pizza', img: 'categories/pizza.jpg' },
@@ -176,8 +185,7 @@ export class RestaurantsComponent implements OnInit {
     { label: 'Desserts', cuisine: 'Desserts', img: 'categories/desserts.jpg' },
   ];
 
-  // Section épinglée : le scroll vertical fait défiler les cartes vers la gauche,
-  // puis la page reprend son scroll normal quand les cartes sont arrivées au bout.
+  // Défilement horizontal des catégories
   hscroll(outer: HTMLElement) {
     const pin = outer.firstElementChild as HTMLElement;
     const view = pin.querySelector('.fx-hs__view') as HTMLElement;
@@ -191,9 +199,11 @@ export class RestaurantsComponent implements OnInit {
     track.style.transform = `translate3d(${-p * dist}px, 0, 0)`;
     bar.style.transform = `scaleX(${p})`;
   }
-  // ---- Comment ça marche ----
+
+  // Référence à la section "Comment ça marche"
   howRef = viewChild<ElementRef<HTMLElement>>('how');
 
+  // Contenu des quatre étapes de commande
   howSteps = [
     { icon: 'search', label: 'Étape 1', title: 'Choisissez votre restaurant',
       text: "Cherchez par nom, filtrez par cuisine ou affichez seulement les restaurants ouverts. Chaque fiche indique les horaires et les frais de livraison." },
@@ -206,15 +216,14 @@ export class RestaurantsComponent implements OnInit {
   ];
 
   constructor() {
-    // Calcule l'état de départ de la timeline une fois la page affichée
+    // Initialise la timeline après l'affichage de la page
     afterNextRender(() => {
       const el = this.howRef()?.nativeElement;
       if (el) this.howScroll(el);
     });
   }
 
-  // La ligne rouge se remplit et chaque étape s'allume quand elle passe sous la « ligne de lecture »
-  // (à 60 % de la hauteur de l'écran).
+  // Animation de la timeline selon la position du scroll
   howScroll(sec: HTMLElement) {
     const list = sec.querySelector('.fx-how__steps') as HTMLElement | null;
     const rail = list?.querySelector('.fx-how__rail') as HTMLElement | null;
@@ -223,7 +232,7 @@ export class RestaurantsComponent implements OnInit {
     if (steps.length < 2) return;
     const fill = rail.firstElementChild as HTMLElement;
     const box = list.getBoundingClientRect();
-    // position verticale du centre de chaque point, mesurée depuis le haut de la liste
+    // Position verticale du centre de chaque point par rapport au haut de la liste
     const c = steps.map((s) => {
       const r = (s.querySelector('.fx-step__dot') as HTMLElement).getBoundingClientRect();
       return r.top + r.height / 2 - box.top;
@@ -237,8 +246,10 @@ export class RestaurantsComponent implements OnInit {
     steps.forEach((s, i) => s.classList.toggle('on', i === 0 || line >= c[i]));
   }
 
+  // Service de gestion des restaurants
   private service = inject(RestaurantService);
 
+  // Paramètres des filtres et de la pagination
   cuisines = ['Italienne', 'Tunisienne', 'Fast-food', 'Pizza'];
 
   search = '';
@@ -247,6 +258,7 @@ export class RestaurantsComponent implements OnInit {
   sort = 'nom';
   limit = 6;
 
+  // Données et états de la liste des restaurants
   page = signal(1);
   restaurants = signal<Restaurant[]>([]);
   total = signal(0);
@@ -254,11 +266,12 @@ export class RestaurantsComponent implements OnInit {
   loading = signal(false);
   error = signal('');
 
+  // Chargement initial des restaurants
   ngOnInit() {
     this.load();
   }
 
-  // Quelle illustration afficher quand le restaurant n'a pas de photo
+  // Choisit l'illustration selon le type de cuisine
   art(r: Restaurant): 'pizza' | 'burger' | 'tajine' | 'bowl' {
     const t = (r.typeCuisine || '').toLowerCase();
     if (t.includes('pizza') || t.includes('ital')) return 'pizza';
@@ -267,21 +280,25 @@ export class RestaurantsComponent implements OnInit {
     return 'bowl';
   }
 
+  // Sélectionne une cuisine et actualise les résultats
   pickCuisine(c: string) {
     this.cuisine = c;
     this.applyFilters();
   }
 
+  // Applique les filtres en revenant à la première page
   applyFilters() {
     this.page.set(1);
     this.load();
   }
 
+  // Change la page des résultats
   goTo(p: number) {
     this.page.set(p);
     this.load();
   }
 
+  // Récupère les restaurants selon les filtres sélectionnés
   load() {
     this.loading.set(true);
     this.error.set('');
